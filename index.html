@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#242626">
+<title>TOFUPAD</title>
+
+<link rel="icon" type="image/png" href="./favicon.png">
+
+<style>
+:root {
+    --bg: #242626;
+    --fg: #CCD1D4;
+    --bar: #CCD1D4;
+    --bar-fg: #242626;
+    --border: #444849;
+    --hover: #414646;
+    --accent: #83B5D1;
+    --danger: #E59A9A;
+    --font: "Consolas", "Courier New", monospace;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font);
+    font-size: 14px;
+}
+
+button, input, select, textarea {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+.topbar {
+    height: 48px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 0 15px;
+    background: var(--bar);
+    color: var(--bar-fg);
+    border-bottom: 1px solid #a9afb2;
+    user-select: none;
+}
+
+#appLogo {
+    width: 29px;
+    height: 29px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.app-title {
+    font-family: Arial, sans-serif;
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+.app-subtitle {
+    margin-left: auto;
+    font: 11px Arial, sans-serif;
+    opacity: .7;
+}
+
+.toolbar {
+    min-height: 43px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding: 5px 10px;
+    background: var(--bar);
+    color: var(--bar-fg);
+    border-bottom: 1px solid #a9afb2;
+    user-select: none;
+}
+
+.tool {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 34px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--bar-fg);
+}
+
+.tool:hover {
+    background: #b5bdc0;
+    border-color: #9ba3a6;
+}
+
+.tool:active {
+    background: #a4adb0;
+}
+
+.tool:focus-visible {
+    outline: 2px solid #477b96;
+    outline-offset: 1px;
+}
+
+.tool svg {
+    width: 19px;
+    height: 19px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.separator {
+    width: 1px;
+    height: 23px;
+    background: #9da5a8;
+    margin: 0 6px;
+    flex-shrink: 0;
+}
+
+.editor-wrap {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    display: flex;
+    background: var(--bg);
+}
+
+#editor {
+    display: block;
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    resize: none;
+    border: 0;
+    outline: 0;
+    padding: 16px 19px;
+    background: var(--bg);
+    color: var(--fg);
+    caret-color: var(--fg);
+    font: 14px/1.55 var(--font);
+    tab-size: 4;
+    white-space: pre-wrap;
+    overflow: anywhere;
+    spellcheck: false;
+}
+
+#editor::selection {
+    background: #526c79;
+    color: #fff;
+}
+
+.statusbar {
+    min-height: 29px;
+    height: 29px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 12px;
+    background: var(--bar);
+    color: var(--bar-fg);
+    border-top: 1px solid #a9afb2;
+    font: 11px Arial, sans-serif;
+    user-select: none;
+}
+
+#fileStatus {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.status-spacer {
+    flex: 1;
+}
+
+#encodingStatus, #modifiedStatus {
+    white-space: nowrap;
+}
+
+#modifiedStatus {
+    font-weight: 700;
+}
+
+#modifiedStatus.dirty {
+    color: #8d3d24;
+}
+
+.dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    background: rgb(0 0 0 / 65%);
+}
+
+.dialog-backdrop.visible {
+    display: flex;
+}
+
+.dialog {
+    width: min(440px, 100%);
+    padding: 20px;
+    background: #303434;
+    color: var(--fg);
+    border: 1px solid #60686a;
+    border-radius: 7px;
+    box-shadow: 0 12px 45px #0008;
+}
+
+.dialog h2 {
+    margin: 0 0 19px;
+    font: 700 17px Arial, sans-serif;
+}
+
+.dialog label {
+    display: block;
+    margin: 13px 0 6px;
+    font-size: 12px;
+}
+
+.dialog input, .dialog select {
+    width: 100%;
+    min-height: 36px;
+    padding: 7px 9px;
+    background: #222525;
+    color: var(--fg);
+    border: 1px solid #626a6c;
+    border-radius: 4px;
+}
+
+.dialog input:focus, .dialog select:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+.dialog-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 9px;
+    margin-top: 22px;
+}
+
+.dialog-button {
+    min-height: 34px;
+    padding: 7px 15px;
+    border: 1px solid #687174;
+    border-radius: 4px;
+    background: #414747;
+    color: var(--fg);
+}
+
+.dialog-button.primary {
+    background: var(--fg);
+    color: var(--bg);
+    border-color: var(--fg);
+    font-weight: 700;
+}
+
+.dialog-button:hover {
+    filter: brightness(1.15);
+}
+
+.dialog-message {
+    margin-top: 12px;
+    color: var(--danger);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+#toast {
+    position: fixed;
+    left: 50%;
+    bottom: 45px;
+    z-index: 20;
+    max-width: calc(100% - 30px);
+    padding: 10px 15px;
+    border: 1px solid #697274;
+    border-radius: 5px;
+    background: #353a3a;
+    color: var(--fg);
+    box-shadow: 0 4px 18px #0006;
+    transform: translateX(-50%);
+    display: none;
+    font: 12px/1.5 Arial, sans-serif;
+}
+
+#toast.visible {
+    display: block;
+}
+
+.hidden {
+    display: none !important;
+}
+
+@media (max-width: 520px) {
+    .toolbar {
+        gap: 1px;
+        padding-inline: 4px;
+        justify-content: space-around;
+    }
+
+    .tool {
+        width: 30px;
+        height: 31px;
+    }
+
+    .separator {
+        margin-inline: 2px;
+    }
+
+    .app-subtitle {
+        display: none;
+    }
+
+    #editor {
+        padding: 12px;
+    }
+
+    .statusbar {
+        gap: 7px;
+        padding-inline: 7px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<svg xmlns="http://www.w3.org/2000/svg"
+     style="position:absolute;width:0;height:0;overflow:hidden"
+     aria-hidden="true">
+  <symbol id="i-new" viewBox="0 0 24 24">
+    <path d="M13 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-8"/>
+    <path d="M13 3v6h6M16 3v5h5M12 12v7M8.5 15.5h7"/>
+  </symbol>
+  <symbol id="i-open" viewBox="0 0 24 24">
+    <path d="M3 6a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v1"/>
+    <path d="M3 8h18l-3 11H3z"/>
+    <path d="M12 11v5m-2-2 2 2 2-2"/>
+  </symbol>
+  <symbol id="i-save" viewBox="0 0 24 24">
+    <path d="M4 3h13l4 4v14H3V3z"/>
+    <path d="M7 3v6h10V4M7 21v-8h10v8"/>
+  </symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24">
+    <path d="M9 14 4 9l5-5"/>
+    <path d="M4 9h10a6 6 0 0 1 0 12h-2"/>
+  </symbol>
+  <symbol id="i-redo" viewBox="0 0 24 24">
+    <path d="m15 14 5-5-5-5"/>
+    <path d="M20 9H10a6 6 0 0 0 0 12h2"/>
+  </symbol>
+  <symbol id="i-cut" viewBox="0 0 24 24">
+    <circle cx="6" cy="6" r="3"/>
+    <circle cx="6" cy="18" r="3"/>
+    <path d="m8.2 8.2 11.3 11.3M8.2 15.8 19.5 4.5"/>
+  </symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24">
+    <rect x="8" y="8" width="12" height="13" rx="1"/>
+    <path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h3"/>
+  </symbol>
+  <symbol id="i-paste" viewBox="0 0 24 24">
+    <path d="M8 5H5v16h14V5h-3"/>
+    <rect x="8" y="3" width="8" height="5" rx="1"/>
+    <path d="M8 13h8m-8 4h8"/>
+  </symbol>
+  <symbol id="i-search" viewBox="0 0 24 24">
+    <circle cx="10.5" cy="10.5" r="6.5"/>
+    <path d="m15.5 15.5 5 5"/>
+  </symbol>
+</svg>
+
+<header class="topbar">
+    <img id="appLogo" alt="TOFUPAD">
+    <span class="app-title">TOFUPAD 0.1</span>
+    <span class="app-subtitle">TOFUPAD TEXT EDITOR</span>
+</header>
+
+<nav class="toolbar" aria-label="Strumenti">
+
+    <button class="tool" id="btnNew" title="Nuovo (Ctrl+N)"
+            aria-label="Nuovo">
+        <svg><use href="#i-new"/></svg>
+    </button>
+
+    <button class="tool" id="btnOpen" title="Apri (Ctrl+O)"
+            aria-label="Apri">
+        <svg><use href="#i-open"/></svg>
+    </button>
+
+    <button class="tool" id="btnSave" title="Salva (Ctrl+S)"
+            aria-label="Salva">
+        <svg><use href="#i-save"/></svg>
+    </button>
+
+    <span class="separator" aria-hidden="true"></span>
+
+    <button class="tool" id="btnUndo" title="Indietro (Ctrl+Z)"
+            aria-label="Indietro">
+        <svg><use href="#i-undo"/></svg>
+    </button>
+
+    <button class="tool" id="btnRedo" title="Avanti (Ctrl+Y)"
+            aria-label="Avanti">
+        <svg><use href="#i-redo"/></svg>
+    </button>
+
+    <span class="separator" aria-hidden="true"></span>
+
+    <button class="tool" id="btnCut" title="Taglia (Ctrl+X)"
+            aria-label="Taglia">
+        <svg><use href="#i-cut"/></svg>
+    </button>
+
+    <button class="tool" id="btnCopy" title="Copia (Ctrl+C)"
+            aria-label="Copia">
+        <svg><use href="#i-copy"/></svg>
+    </button>
+
+    <button class="tool" id="btnPaste" title="Incolla (Ctrl+V)"
+            aria-label="Incolla">
+        <svg><use href="#i-paste"/></svg>
+    </button>
+
+    <button class="tool" id="btnSearch" title="Cerca (Ctrl+F)"
+            aria-label="Cerca">
+        <svg><use href="#i-search"/></svg>
+    </button>
+
+</nav>
+
+<input type="file" id="fileInput" class="hidden"
+       accept=".txt,.text,.csv,.tsv,.log,.md,.markdown,.json,.xml,.html,.htm,.css,.js,.mjs,.cjs,.ts,.py,.java,.c,.h,.cpp,.hpp,.cs,.php,.sql,.sh,.bash,.bat,.cmd,.ps1,.ini,.conf,.cfg,.properties,.yaml,.yml,.toml,.env,.gitignore,.dockerfile,.makefile,.tex,.svg,.pl,.rb,.go,.rs,.swift,.kt,.r,.lua,.diff,.patch"
+       aria-label="Seleziona file di testo">
+
+<main class="editor-wrap">
+    <textarea id="editor"
+              wrap="soft"
+              spellcheck="false"
+              autocapitalize="off"
+              autocomplete="off"
+              autocorrect="off"
+              aria-label="Testo del documento"
+              placeholder="Inizia a scrivere..."></textarea>
+</main>
+
+<footer class="statusbar">
+    <span id="fileStatus">nuovo.txt</span>
+    <span class="status-spacer"></span>
+    <span id="encodingStatus">UTF-8</span>
+    <span id="modifiedStatus">Salvato</span>
+</footer>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<!-- Finestra di salvataggio -->
+<div id="saveDialog" class="dialog-backdrop"
+     role="dialog" aria-modal="true" aria-labelledby="saveTitle">
+  <div class="dialog">
+    <h2 id="saveTitle">Salva documento</h2>
+
+    <label for="saveFilename">Nome del file</label>
+    <input id="saveFilename" type="text"
+           value="documento.txt" maxlength="180"
+           autocomplete="off">
+
+    <label for="saveEncoding">Codifica del testo</label>
+    <select id="saveEncoding">
+      <option value="utf-8">UTF-8</option>
+      <option value="iso-8859-15">ISO-8859-15 (Latin-9)</option>
+    </select>
+
+    <div id="saveError" class="dialog-message" role="alert"></div>
+
+    <div class="dialog-buttons">
+      <button class="dialog-button" id="saveCancel">Annulla</button>
+      <button class="dialog-button primary" id="saveConfirm">Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- Finestra di ricerca -->
+<div id="searchDialog" class="dialog-backdrop"
+     role="dialog" aria-modal="true" aria-labelledby="searchTitle">
+  <div class="dialog">
+    <h2 id="searchTitle">Cerca nel documento</h2>
+
+    <label for="searchText">Testo da cercare</label>
+    <input id="searchText" type="text" autocomplete="off">
+
+    <div class="dialog-buttons">
+      <button class="dialog-button" id="searchCancel">Chiudi</button>
+      <button class="dialog-button primary" id="searchNext">Trova successivo</button>
+    </div>
+  </div>
+</div>
+
+<script>
+
+"use strict";
+
+const CONFIG = {
+    MAX_FILE_SIZE: 5 * 1024 * 1024,
+    MAX_HISTORY: 200
+};
+
+const $ = id => document.getElementById(id);
+
+const editor = $("editor");
+const fileInput = $("fileInput");
+
+let currentFilename = "nuovo.txt";
+let currentEncoding = "utf-8";
+let isDirty = false;
+let savedText = "";
+let previousText = "";
+let undoStack = [];
+let redoStack = [];
+let toastTimer = null;
+
+function createLogo() {
+    const logo = "./favicon.png";
+
+    $("appLogo").src = logo;
+}
+
+
+createLogo();
+
+function showToast(message) {
+    const toast = $("toast");
+    toast.textContent = message;
+    toast.classList.add("visible");
+
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+        toast.classList.remove("visible");
+    }, 3500);
+}
+
+function updateStatus() {
+    $("fileStatus").textContent = currentFilename;
+    $("encodingStatus").textContent =
+        currentEncoding === "utf-8" ? "UTF-8" : "ISO-8859-15";
+
+    $("modifiedStatus").textContent =
+        isDirty ? "Modificato *" : "Salvato";
+
+    $("modifiedStatus").classList.toggle("dirty", isDirty);
+
+    document.title =
+        (isDirty ? "* " : "") + currentFilename + " — TOFUPAD";
+}
+
+function updateDirtyState() {
+    isDirty = editor.value !== savedText;
+    updateStatus();
+}
+
+function resetHistory() {
+    undoStack = [];
+    redoStack = [];
+    previousText = editor.value;
+}
+
+function pushHistory(stack, value) {
+    stack.push(value);
+
+    if (stack.length > CONFIG.MAX_HISTORY) {
+        stack.shift();
+    }
+}
+
+function recordEdit() {
+    if (editor.value !== previousText) {
+        pushHistory(undoStack, previousText);
+        redoStack = [];
+        previousText = editor.value;
+        updateDirtyState();
+    }
+}
+
+editor.addEventListener("input", recordEdit);
+
+function restoreText(value) {
+    editor.value = value;
+    previousText = value;
+    updateDirtyState();
+    editor.focus();
+}
+
+function undo() {
+    if (!undoStack.length) {
+        showToast("Nessuna operazione da annullare.");
+        return;
+    }
+
+    pushHistory(redoStack, editor.value);
+    restoreText(undoStack.pop());
+}
+
+function redo() {
+    if (!redoStack.length) {
+        showToast("Nessuna operazione da ripristinare.");
+        return;
+    }
+
+    pushHistory(undoStack, editor.value);
+    restoreText(redoStack.pop());
+}
+
+/* Controlla se il documento contiene modifiche non salvate. */
+function confirmDiscard() {
+    if (!isDirty) return true;
+
+    return window.confirm(
+        "Il documento contiene modifiche non salvate. " +
+        "Vuoi proseguire senza salvarle?"
+    );
+}
+
+function resetDocument(filename = "nuovo.txt",
+                       encoding = "utf-8",
+                       text = "") {
+    currentFilename = filename;
+    currentEncoding = encoding;
+    editor.value = text;
+    savedText = text;
+    isDirty = false;
+
+    resetHistory();
+    updateStatus();
+    editor.focus();
+}
+
+const ALLOWED_EXTENSIONS = new Set([
+    "txt", "text", "csv", "tsv", "log", "md", "markdown",
+    "json", "xml", "html", "htm", "css", "js", "mjs", "cjs",
+    "ts", "py", "java", "c", "h", "cpp", "hpp", "cs", "php",
+    "sql", "sh", "bash", "bat", "cmd", "ps1", "ini", "conf",
+    "cfg", "properties", "yaml", "yml", "toml", "env",
+    "gitignore", "dockerfile", "makefile", "tex", "svg",
+    "pl", "rb", "go", "rs", "swift", "kt", "r", "lua",
+    "diff", "patch"
+]);
+
+function getExtension(filename) {
+    const name = filename.toLowerCase();
+
+    if (name === "dockerfile" || name === "makefile" ||
+        name === ".gitignore" || name === ".env") {
+        return name.replace(/^\./, "");
+    }
+
+    const dot = name.lastIndexOf(".");
+    return dot >= 0 ? name.slice(dot + 1) : "";
+}
+
+function isAllowedFile(filename) {
+    return ALLOWED_EXTENSIONS.has(getExtension(filename));
+}
+
+/* Rileva file binari tramite byte NUL e caratteri di controllo.
+   Tab, CR e LF sono consentiti. */
+function looksLikeText(bytes) {
+    if (bytes.length === 0) return true;
+
+    let suspicious = 0;
+    const sampleLength = Math.min(bytes.length, 65536);
+
+    for (let i = 0; i < sampleLength; i++) {
+        const b = bytes[i];
+
+        if (b === 0) return false;
+
+        if (
+            (b < 32 && b !== 9 && b !== 10 && b !== 13 && b !== 12) ||
+            b === 127
+        ) {
+            suspicious++;
+        }
+    }
+
+    return suspicious / sampleLength < 0.02;
+}
+
+function decodeUtf8(bytes) {
+    try {
+        return new TextDecoder("utf-8", { fatal: true })
+            .decode(bytes);
+    } catch {
+        return null;
+    }
+}
+
+
+function decodeLatin9(bytes) {
+    try {
+        return new TextDecoder("iso-8859-15", { fatal: true })
+            .decode(bytes);
+    } catch {
+        const replacements = {
+            164: 8364, 166: 352, 168: 353, 180: 381,
+            184: 382, 188: 338, 189: 339, 190: 376
+        };
+
+        let result = "";
+        const chunkSize = 8192;
+
+        for (let start = 0; start < bytes.length; start += chunkSize) {
+            const end = Math.min(start + chunkSize, bytes.length);
+            const chars = [];
+
+            for (let i = start; i < end; i++) {
+                const b = bytes[i];
+                chars.push(String.fromCharCode(replacements[b] || b));
+            }
+
+            result += chars.join("");
+        }
+
+        return result;
+    }
+}
+
+function decodeTextFile(bytes) {
+    const utf8 = decodeUtf8(bytes);
+
+    if (utf8 !== null) {
+        return { text: utf8, encoding: "utf-8" };
+    }
+
+    return {
+        text: decodeLatin9(bytes),
+        encoding: "iso-8859-15"
+    };
+}
+
+async function openSelectedFile(file) {
+    if (!file) return;
+
+    if (!confirmDiscard()) {
+        fileInput.value = "";
+        return;
+    }
+
+    if (!isAllowedFile(file.name)) {
+        showToast("Formato non consentito: seleziona un file di testo.");
+        fileInput.value = "";
+        return;
+    }
+
+    if (file.size > CONFIG.MAX_FILE_SIZE) {
+        showToast(
+            "File troppo grande. Limite massimo: 5 MiB."
+        );
+        fileInput.value = "";
+        return;
+    }
+
+    try {
+        const buffer = await file.arrayBuffer();
+        const bytes = new Uint8Array(buffer);
+
+        if (!looksLikeText(bytes)) {
+            showToast(
+                "Il file sembra binario o contiene caratteri non testuali."
+            );
+            return;
+        }
+
+        const decoded = decodeTextFile(bytes);
+
+        /* Protezione aggiuntiva sul contenuto decodificato. */
+        if (decoded.text.includes("\u0000")) {
+            showToast("Impossibile aprire: il file contiene dati binari.");
+            return;
+        }
+
+        resetDocument(
+            file.name,
+            decoded.encoding,
+            decoded.text
+        );
+
+        showToast(
+            "File aperto correttamente (" +
+            (decoded.encoding === "utf-8" ? "UTF-8" : "ISO-8859-15") +
+            ")."
+        );
+    } catch (error) {
+        console.error(error);
+        showToast("Errore durante l'apertura del file.");
+    } finally {
+        fileInput.value = "";
+    }
+}
+
+/* Salvataggio: genera un download nella cartella predefinita
+   del browser, secondo le impostazioni del browser stesso. */
+
+function encodeLatin9(text) {
+    const special = new Map([
+        ["€", 164], ["Š", 166], ["š", 168], ["Ž", 180],
+        ["ž", 184], ["Œ", 188], ["œ", 189], ["Ÿ", 190]
+    ]);
+
+    const bytes = [];
+
+    for (const char of text) {
+        if (special.has(char)) {
+            bytes.push(special.get(char));
+            continue;
+        }
+
+        const code = char.codePointAt(0);
+
+        if (code > 255) {
+            throw new Error(
+                "Il carattere \"" + char +
+                "\" non è rappresentabile in ISO-8859-15."
+            );
+        }
+
+        /* Questi caratteri sono stati sostituiti da Latin-9. */
+        if ([164, 166, 168, 180, 184, 188, 189, 190].includes(code)) {
+            throw new Error(
+                "Il carattere \"" + char +
+                "\" non è rappresentabile in ISO-8859-15."
+            );
+        }
+
+        bytes.push(code);
+    }
+
+    return new Uint8Array(bytes);
+}
+
+function encodeDocument(text, encoding) {
+    if (encoding === "utf-8") {
+        return new TextEncoder().encode(text);
+    }
+
+    return encodeLatin9(text);
+}
+
+function sanitizeFilename(name) {
+    let clean = name.trim();
+
+    /* Evita percorsi: il nome deve essere soltanto un nome file. */
+    clean = clean.replace(/[\/\\:*?"<>|\u0000-\u001F]/g, "_");
+    clean = clean.replace(/^\.+$/, "");
+
+    if (!clean) clean = "documento.txt";
+
+    if (!/\.[a-z0-9_-]+$/i.test(clean)) {
+        clean += ".txt";
+    }
+
+    return clean.slice(0, 180);
+}
+
+function openSaveDialog() {
+    $("saveFilename").value = currentFilename;
+    $("saveEncoding").value = currentEncoding;
+    $("saveError").textContent = "";
+    $("saveDialog").classList.add("visible");
+
+    $("saveFilename").focus();
+    $("saveFilename").select();
+}
+
+function closeSaveDialog() {
+    $("saveDialog").classList.remove("visible");
+    editor.focus();
+}
+
+function saveDocument() {
+    const filename = sanitizeFilename($("saveFilename").value);
+    const encoding = $("saveEncoding").value;
+    const errorBox = $("saveError");
+
+    errorBox.textContent = "";
+
+    let bytes;
+
+    try {
+        bytes = encodeDocument(editor.value, encoding);
+    } catch (error) {
+        errorBox.textContent = error.message;
+        return;
+    }
+
+    try {
+        const blob = new Blob([bytes], {
+            type: "text/plain;charset=" +
+                (encoding === "utf-8" ? "utf-8" : "iso-8859-15")
+        });
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+
+        link.href = url;
+        link.download = filename;
+        link.style.display = "none";
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        /* Revoca l'URL dopo aver avviato il download. */
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+        currentFilename = filename;
+        currentEncoding = encoding;
+        savedText = editor.value;
+        isDirty = false;
+        updateStatus();
+        closeSaveDialog();
+
+        showToast("Download avviato: " + filename);
+    } catch (error) {
+        console.error(error);
+        errorBox.textContent =
+            "Il browser non ha consentito di avviare il download.";
+    }
+}
+
+
+$("btnNew").addEventListener("click", () => {
+    if (confirmDiscard()) {
+        resetDocument();
+    }
+});
+
+$("btnOpen").addEventListener("click", () => {
+    if (!isDirty || confirmDiscard()) {
+        fileInput.click();
+    }
+});
+
+fileInput.addEventListener("change", () => {
+    const file = fileInput.files && fileInput.files[0];
+
+    if (file) {
+        openSelectedFile(file);
+    }
+});
+
+$("btnSave").addEventListener("click", openSaveDialog);
+$("saveCancel").addEventListener("click", closeSaveDialog);
+$("saveConfirm").addEventListener("click", saveDocument);
+
+$("saveDialog").addEventListener("click", event => {
+    if (event.target === $("saveDialog")) closeSaveDialog();
+});
+
+$("btnUndo").addEventListener("click", undo);
+$("btnRedo").addEventListener("click", redo);
+
+async function copySelection(cut = false) {
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+
+    if (start === end) {
+        showToast("Seleziona prima il testo.");
+        return;
+    }
+
+    const selected = editor.value.slice(start, end);
+
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(selected);
+        } else {
+            editor.focus();
+            document.execCommand("copy");
+        }
+
+        if (cut) {
+            editor.setRangeText("", start, end, "start");
+            recordEdit();
+        }
+    } catch {
+        editor.focus();
+        document.execCommand(cut ? "cut" : "copy");
+
+        if (cut) recordEdit();
+    }
+}
+
+async function pasteText() {
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            const text = await navigator.clipboard.readText();
+
+            editor.setRangeText(
+                text,
+                editor.selectionStart,
+                editor.selectionEnd,
+                "end"
+            );
+
+            recordEdit();
+        } else {
+            showToast(
+                "Incolla con Ctrl+V o Cmd+V: accesso agli appunti limitato."
+            );
+            editor.focus();
+        }
+    } catch {
+        showToast(
+            "Usa Ctrl+V o Cmd+V per incollare. " +
+            "Il browser non ha autorizzato l'accesso agli appunti."
+        );
+        editor.focus();
+    }
+}
+
+$("btnCut").addEventListener("click", () => copySelection(true));
+$("btnCopy").addEventListener("click", () => copySelection(false));
+$("btnPaste").addEventListener("click", pasteText);
+
+/* Ricerca testuale, senza distinzione tra maiuscole e minuscole. */
+function openSearchDialog() {
+    $("searchDialog").classList.add("visible");
+    $("searchText").focus();
+    $("searchText").select();
+}
+
+function closeSearchDialog() {
+    $("searchDialog").classList.remove("visible");
+    editor.focus();
+}
+
+function findNext() {
+    const query = $("searchText").value;
+
+    if (!query) {
+        showToast("Inserisci il testo da cercare.");
+        $("searchText").focus();
+        return;
+    }
+
+    const content = editor.value;
+    const lowerContent = content.toLocaleLowerCase();
+    const lowerQuery = query.toLocaleLowerCase();
+
+    let index = lowerContent.indexOf(lowerQuery, editor.selectionEnd);
+
+    if (index === -1 && editor.selectionEnd > 0) {
+        index = lowerContent.indexOf(lowerQuery, 0);
+    }
+
+    if (index === -1) {
+        showToast("Testo non trovato.");
+        return;
+    }
+
+    closeSearchDialog();
+    editor.focus();
+    editor.setSelectionRange(index, index + query.length);
+
+    /* Porta la selezione in vista senza alterare il testo. */
+    const before = content.slice(0, index);
+    const lineCount = before.split("\n").length;
+    const lineHeight = parseFloat(getComputedStyle(editor).lineHeight) || 22;
+
+    editor.scrollTop = Math.max(0, (lineCount - 2) * lineHeight);
+}
+
+$("btnSearch").addEventListener("click", openSearchDialog);
+$("searchCancel").addEventListener("click", closeSearchDialog);
+$("searchNext").addEventListener("click", findNext);
+
+$("searchDialog").addEventListener("click", event => {
+    if (event.target === $("searchDialog")) closeSearchDialog();
+});
+
+$("searchText").addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        findNext();
+    }
+
+    if (event.key === "Escape") {
+        closeSearchDialog();
+    }
+});
+
+$("saveFilename").addEventListener("keydown", event => {
+    if (event.key === "Enter") saveDocument();
+    if (event.key === "Escape") closeSaveDialog();
+});
+
+/* Scorciatoie da tastiera. */
+document.addEventListener("keydown", event => {
+    const key = event.key.toLowerCase();
+    const modifier = event.ctrlKey || event.metaKey;
+
+    if (!modifier) {
+        if (event.key === "Escape") {
+            if ($("saveDialog").classList.contains("visible")) {
+                closeSaveDialog();
+            } else if ($("searchDialog").classList.contains("visible")) {
+                closeSearchDialog();
+            }
+        }
+
+        return;
+    }
+
+    if (key === "n") {
+        event.preventDefault();
+        $("btnNew").click();
+    } else if (key === "o") {
+        event.preventDefault();
+        $("btnOpen").click();
+    } else if (key === "s") {
+        event.preventDefault();
+        openSaveDialog();
+    } else if (key === "z" && !event.shiftKey) {
+        event.preventDefault();
+        undo();
+    } else if (key === "y" || (key === "z" && event.shiftKey)) {
+        event.preventDefault();
+        redo();
+    } else if (key === "f") {
+        event.preventDefault();
+        openSearchDialog();
+    }
+});
+
+/* Avviso prima di abbandonare una pagina con modifiche. */
+window.addEventListener("beforeunload", event => {
+    if (isDirty) {
+        event.preventDefault();
+        event.returnValue = "";
+    }
+});
+
+/* Stato iniziale. */
+resetDocument();
+editor.focus();
+
+</script>
+</body>
+</html>
+
